@@ -44,9 +44,12 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
 
     # cv.imshow('OG',img)
     # cv.imshow('mask',mask)
+    
+    #If you do not want to see what the camera is detecting just comment this out
     cv.imshow('res', res)
 
-    # resize image
+    # This will resize the displayed image however it does slow down the program since this is done for every frame
+    
     # scale_percent = 200  # percent of original size
     # width = int(img.shape[1] * scale_percent / 100)
     # height = int(img.shape[0] * scale_percent / 100)
@@ -80,6 +83,7 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     if x == 0 and y == 0:
         print("No Markers Found")
     else:
+        #ALEX !!!!!!!!!!!!!!! THIS IS THE ANGLE FROM THE CENTER OF THE CAMERA!
         print("Angle From Center" + str(angleToObject))
 
     key = cv.waitKey(1) & 0xFF
