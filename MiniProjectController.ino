@@ -1,7 +1,16 @@
 // This code implements a proportional-integral controller
 
 #include <Encoder.h>
+#include <Wire.h>
+
 #define tol 0.01
+#define ADDRESS 0x04
+
+//I2C data reading setup
+byte data[32];
+byte split[4];
+int write_to = 0;
+int read_len = 0;
 
 Encoder wheel(2,3);
 
@@ -33,7 +42,11 @@ float pi = 3.1415;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(7,OUTPUT);
+  Wire.begin(ADDRESS); //define the send and receive functions for I2C comms
+  Wire.onRequest(send_data);
+  Wire.onReceive(receive_data);
+  
+  pinMode(7,OUTPUT);  //define pins for PWM output and motor direction
   pinMode(4,OUTPUT);
   digitalWrite(4,HIGH);
 }
@@ -50,7 +63,6 @@ void loop() {
   }
   // read requested position
   //requested_position = analogRead(input_pin) * ratio;
-  requested_position = 1.57;
 
   // calculate error
   e = requested_position - current_position;
@@ -91,3 +103,24 @@ void loop() {
     // :)
   }
 }
+
+void receive_data(int num_byte){
+  write_to = Wire.read(); //read the address as not to overwrite data on read
+ 
+  while(Wire.available()){ //read while data is available
+    data[read_len] = Wire.read();
+    read_len++;
+  }
+  read_len = 0;
+  requested_position = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]); //Reconcatenate the 4 read bytes for requested postion
+}
+
+void send_data(){
+  //split the floating point number into 4 bytes and send each
+  split[0] = current_position >> 24;
+  split[1] = current_position << 8) >> 24;
+  split[2] = (current_position << 16) >> 24;
+  split[3] = (current_position << 24) >> 24;
+  Wire.write(split, 4); 
+}
+
