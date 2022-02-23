@@ -6,6 +6,23 @@ from time import sleep
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
+from smbus2 import SMBus
+import board
+import busio
+import adafruit_character_lcd.character_lcd_rgb_i2c as character_lcd
+
+target = 0
+split = [0,0,0,0]
+read = [];
+current_angle = 0
+
+lcd_columns = 16 #initialize the LCD display
+lcd_rows = 2
+i2c = board.I2C()
+lcd = character_lcd.Character_LCD_RGB_I2C(i2c, lcd_columns, lcd_rows)
+
+lcd.clear() #clear display for printing
+lcd.color = [100, 0, 50] #make lcd a good color
 
 # initialize the camera and grab a reference to the raw camera capture
 camera = PiCamera()
@@ -85,7 +102,19 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     else:
         #ALEX !!!!!!!!!!!!!!! THIS IS THE ANGLE FROM THE CENTER OF THE CAMERA!
         print("Angle From Center" + str(angleToObject))
-
+        bus = SMBus(1)
+        split[0] = angleToObject >> 24
+        split[1] = (angleToObject << 8) >> 24
+        split[2] = (angleToObject << 16) >> 24
+        split[3] = (angleToObject << 24) >> 24
+        bus.write_i2c_block_data(4, 0, split) #write the given number to offset 0
+        read = bus.read_i2c_block_data(4, 0)
+        current_angle = (read[0] << 24) | (read[1] << 16) | (read[2] << 8) | read[3])
+        bus.close()
+        lcd.message = "Target: " + angleToObject + "\nPosition: " + current_angle
+        
+        
+    
     key = cv.waitKey(1) & 0xFF
     # clear the stream in preparation for the next frame
     rawCapture.truncate(0)
