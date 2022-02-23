@@ -3,6 +3,12 @@
 #include <Encoder.h>
 #define tol 0.01
 
+#include <Wire.h>
+byte data[32];
+byte split[4];
+int write_to = 0;
+int read_len = 0;
+
 Encoder wheel(2,3);
 
 // Position input pin, use ratio to adjust range of analog_in
@@ -10,8 +16,8 @@ int input_pin = 0;
 float ratio = 1;
 
 // Variables Kp and Ki allow for adjustment of PI control
-float Kp = 1;
-float Ki = 5;
+float Kp = 7;
+float Ki = 0.2;
 
 
 // Values for position and integral
@@ -33,6 +39,11 @@ float pi = 3.1415;
 
 void setup() {
   Serial.begin(9600);
+  
+  Wire.begin(ADDRESS); //define the send and receive functions for I2C comms
+  Wire.onRequest(send_data);
+  Wire.onReceive(receive_data);
+  
   pinMode(7,OUTPUT);
   pinMode(4,OUTPUT);
   digitalWrite(4,HIGH);
@@ -90,4 +101,26 @@ void loop() {
   while (millis() < time_now + period) {
     // :)
   }
+}
+
+void receive_data(int num_byte){
+  address = Wire.read(); //read the address as not to overwrite data on read
+ 
+  while(Wire.available()){ //read while data is available
+    data[read_len] = Wire.read();
+    read_len++;
+  }
+  read_len = 0;
+  //reconcatenate the split byte back into 1  floating point number
+  requested_position = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]);
+  
+}
+
+void send_data(){
+  //Split up the angle into 4 bytes to be sent back to the pi
+  split[0] = current_position >> 24;
+  split[1] = (current_position << 8) >> 24;
+  split[2] = (current_position << 16) >> 24;
+  split[3] = (current_position << 24) >> 24;
+  Wire.write(split, 4); 
 }
