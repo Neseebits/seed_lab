@@ -1,7 +1,6 @@
 // This code implements a proportional-integral controller
 
 #include <Encoder.h>
-#define tol 0.01
 
 #include <Wire.h>
 byte data[32];
@@ -54,24 +53,12 @@ void loop() {
 
   // read current position
   current_position = (float)(wheel.read()) * ((2*pi)/3200);
-  if (current_position > pi) {
-    current_position -= 2*pi;
-  } else if (current_position < -pi) {
-    current_position += 2*pi;
-  }
-  // read requested position
-  //requested_position = analogRead(input_pin) * ratio;
-  requested_position = 1.57;
 
   // calculate error
   e = requested_position - current_position;
   
   // calculate I
-  if (abs(e) < tol) {
-    I = 0;
-  } else {
-    I += e * ((float)period / 1000);
-  }
+  I += e * ((float)period / 1000);
 
   // set output
   u = Kp * e + Ki * I;
