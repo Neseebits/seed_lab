@@ -12,7 +12,7 @@ import busio
 import adafruit_character_lcd.character_lcd_rgb_i2c as character_lcd
 
 target = 0
-split = [0,0,0,0]
+split = ['','','','']
 read = [];
 current_angle = 0
 
@@ -103,13 +103,15 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
         #ALEX !!!!!!!!!!!!!!! THIS IS THE ANGLE FROM THE CENTER OF THE CAMERA!
         print("Angle From Center" + str(angleToObject))
         bus = SMBus(1)
-        split[0] = angleToObject >> 24
-        split[1] = (angleToObject << 8) >> 24
-        split[2] = (angleToObject << 16) >> 24
-        split[3] = (angleToObject << 24) >> 24
+        angleToObjectStr = str(round(angleToObject,2))
+
+        split[0] = angleToObjectStr[0]
+        split[1] = angleToObjectStr[1]
+        split[2] = angleToObjectStr[2]
+        split[3] = angleToObjectStr[3]
         bus.write_i2c_block_data(4, 0, split) #write the given number to offset 0
         read = bus.read_i2c_block_data(4, 0)
-        current_angle = (read[0] << 24) | (read[1] << 16) | (read[2] << 8) | read[3])
+        current_angle = float(read[0] + read[1] + read[2] + read[3])
         bus.close()
         lcd.message = "Target: " + angleToObject + "\nPosition: " + current_angle
         
