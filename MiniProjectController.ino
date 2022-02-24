@@ -1,10 +1,11 @@
 // This code implements a proportional-integral controller
 
 #include <Encoder.h>
-
+#include <stdlib.h>
 #include <Wire.h>
+
 byte data[32];
-byte split[4];
+char split[5];
 int write_to = 0;
 int read_len = 0;
 
@@ -99,15 +100,12 @@ void receive_data(int num_byte){
   }
   read_len = 0;
   //reconcatenate the split byte back into 1  floating point number
-  requested_position = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]);
+  requested_position = atof(data);
   
 }
 
 void send_data(){
   //Split up the angle into 4 bytes to be sent back to the pi
-  split[0] = current_position >> 24;
-  split[1] = (current_position << 8) >> 24;
-  split[2] = (current_position << 16) >> 24;
-  split[3] = (current_position << 24) >> 24;
+  dtostrf(current_position, 4, 2, split)
   Wire.write(split, 4); 
 }
